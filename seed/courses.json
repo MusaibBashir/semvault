@@ -1,0 +1,23 @@
+{
+  "_help": "courses: shown on the site. folders: a folder (or file) path in the semester folder -> course code; the longest match wins. Fill in any code left blank.",
+  "courses": [
+    { "code": "IM21203", "name": "Engineering Economy", "short": "EngEco", "semester": 5 },
+    { "code": "IM31005", "name": "Quality Design and Control", "short": "QDC", "semester": 5 },
+    { "code": "IM31006", "name": "Simulation", "short": "Simulation", "semester": 5 },
+    { "code": "IM31201", "name": "Supply Chain Management", "short": "SCM", "semester": 5 },
+    { "code": "CD61002", "name": "High Performance Scientific Computing", "short": "HPSC", "semester": 5 }
+  ],
+  "folders": {
+    "EE": "IM21203",
+    "Notes/EE": "IM21203",
+    "QDC": "IM31005",
+    "QDC Lab": "IM31005",
+    "QDC Lab All Exps": "IM31005",
+    "Simulation": "IM31006",
+    "Simulation_Notes.pdf": "IM31006",
+    "simulation lab": "IM31006",
+    "SCM": "IM31201",
+    "HPSC": "CD61002",
+    "stochastic": ""
+  }
+}
