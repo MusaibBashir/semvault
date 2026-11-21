@@ -60,7 +60,7 @@ function validateUpload(meta, file, source) {
   var errors = [];
   meta = meta || {};
   if (!String(meta.title || '').trim()) errors.push('Title is required');
-  if (!String(meta.course || '').trim()) errors.push('Course is required');
+  if (!String(meta.course || '').replace(/^OTHER:/, '').trim()) errors.push('Course is required');
   if (ITEM_TYPES.indexOf(meta.type) === -1) errors.push('Unknown type');
   if (!file || !file.base64) {
     errors.push('File is required');

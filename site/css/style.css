@@ -210,3 +210,27 @@ mark { background: linear-gradient(100deg, transparent 0.15em, var(--marker) 0.2
 
 /* The home page has its own big search box. */
 body[data-view="home"] .header-search { display: none; }
+
+/* ---- Forms (upload, mod panel) ---- */
+.lede { color: var(--ink-soft); max-width: 38rem; margin: 0 0 1.5rem; }
+.upload-form { display: grid; gap: 1.25rem; max-width: 36rem; }
+.field { display: flex; flex-direction: column; gap: 0.35rem; border: 0; padding: 0; margin: 0; min-width: 0; }
+.field > label, .field legend, .field-row label { font-weight: 600; }
+.field legend { padding: 0; margin-bottom: 0.35rem; }
+.field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.75rem; }
+.field-row label { display: flex; flex-direction: column; gap: 0.35rem; }
+.field-extra { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
+.field-extra[hidden], .field-row[hidden] { display: none; }
+.hint { margin: 0; color: var(--ink-soft); font-size: var(--step--1); }
+.optional { font-weight: 400; color: var(--ink-soft); font-size: var(--step--1); }
+input[type="file"] { padding: 0.5rem; background: var(--white); border: 1.5px dashed var(--rule); border-radius: var(--radius); }
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chip input { position: absolute; opacity: 0; }
+.chip span {
+  display: inline-block; padding: 0.4rem 0.8rem; border: 1.5px solid var(--rule); border-radius: 999px;
+  background: var(--white); cursor: pointer;
+}
+.chip input:checked + span { border-color: var(--ink); background: var(--marker); font-weight: 600; }
+.chip input:focus-visible + span { outline: 3px solid var(--action); outline-offset: 2px; }
+.hp { position: absolute; left: -9999px; }
+.btn-big { min-height: 3.1rem; font-size: var(--step-1); justify-self: start; padding: 0.5rem 1.5rem; }

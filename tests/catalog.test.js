@@ -99,3 +99,13 @@ test('applyEdits only allows status to become removed', () => {
   assert.equal(g.applyEdits(full, { status: 'pending' }).status, 'approved');
   assert.equal(g.applyEdits(full, { status: 'removed' }).status, 'removed');
 });
+
+test('validateUpload accepts a not-listed course as OTHER:<name>', () => {
+  assert.equal(g.validateUpload({ ...meta, course: 'OTHER:Ergonomics' }, pdf, null).ok, true);
+});
+
+test('validateUpload rejects OTHER: with a blank course name', () => {
+  const r = g.validateUpload({ ...meta, course: 'OTHER:  ' }, pdf, null);
+  assert.equal(r.ok, false);
+  assert.ok(r.errors.includes('Course is required'));
+});
