@@ -4,8 +4,12 @@ const KEY = 'semvault:catalog';
 const TTL = 5 * 60 * 1000;
 
 export const previewMode = !API_URL;
+// Dev only: with no server configured, localStorage 'semvault:mock' = '1' swaps in dev/mock-server.js.
+export const mockMode = previewMode && localStorage.getItem('semvault:mock') === '1';
+const mock = () => import('../dev/mock-server.js');
 
 export async function getCatalog({ fresh = false } = {}) {
+  if (mockMode) return (await mock()).catalog();
   if (!fresh) {
     const cached = sessionStorage.getItem(KEY);
     if (cached) {
@@ -26,13 +30,22 @@ export function clearCatalogCache() {
 }
 
 export async function post(action, body = {}) {
-  if (!API_URL) throw new Error('Preview mode: not connected to the server yet');
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids a CORS preflight Apps Script can't answer
-    body: JSON.stringify({ action, ...body }),
-  });
-  const data = await res.json();
+  let data;
+  if (mockMode) {
+    try {
+      data = await (await mock()).handle(action, body);
+    } catch (e) {
+      data = { ok: false, error: e.message, code: e.code };
+    }
+  } else {
+    if (!API_URL) throw new Error('Preview mode: not connected to the server yet');
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids a CORS preflight Apps Script can't answer
+      body: JSON.stringify({ action, ...body }),
+    });
+    data = await res.json();
+  }
   if (!data.ok) {
     const err = new Error(data.error || 'Something went wrong');
     err.code = data.code;
