@@ -1,0 +1,7 @@
+seed/staging/
+seed/candidates.csv
+node_modules/
+.clasp.json
+.superpowers/
+__pycache__/
+.pytest_cache/
