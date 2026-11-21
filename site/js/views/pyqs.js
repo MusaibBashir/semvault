@@ -1,5 +1,5 @@
 import { filterPyqs, driveUrls } from '../lib/catalog.js';
-import { esc, courseOf } from './item.js';
+import { esc, courseOf, isSample } from './item.js';
 
 const EXAM = { midsem: 'Midsem', endsem: 'Endsem' };
 
@@ -43,8 +43,10 @@ export function render(el, params, catalog) {
             <td data-label="Course"><a href="#/course/${esc(r.course)}">${esc(c.short)}</a></td>
             <td data-label="Year">${esc(r.year || '?')} ${esc(r.term || '')}</td>
             <td data-label="Exam">${esc(EXAM[r.exam] || '?')}</td>
-            <td data-label="Paper"><a href="${u.view}" target="_blank" rel="noopener">${esc(r.title)}</a></td>
-            <td class="pyq-dl"><a class="btn btn-small" href="${u.download}">Download</a></td>
+            <td data-label="Paper">${isSample(r.fileId) ? esc(r.title) : `<a href="${u.view}" target="_blank" rel="noopener">${esc(r.title)}</a>`}</td>
+            <td class="pyq-dl">${isSample(r.fileId)
+              ? '<button class="btn btn-small" type="button" disabled title="Sample entry: there is no real file yet">Download</button>'
+              : `<a class="btn btn-small" href="${u.download}">Download</a>`}</td>
           </tr>`;
         }).join('')}</tbody>
       </table>`;

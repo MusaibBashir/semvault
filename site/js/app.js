@@ -1,4 +1,4 @@
-import { getCatalog } from './api.js';
+import { getCatalog, previewMode } from './api.js';
 import { SITE_NAME } from './config.js';
 
 const routes = [
@@ -65,6 +65,8 @@ document.addEventListener('submit', (e) => {
   const q = String(new FormData(e.target).get('q') || '').trim();
   if (q) location.hash = '#/search?q=' + encodeURIComponent(q);
 });
+
+if (previewMode) document.querySelector('[data-preview-banner]').hidden = false;
 
 window.addEventListener('hashchange', route);
 route();
