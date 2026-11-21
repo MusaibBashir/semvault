@@ -39,7 +39,7 @@ function rowsAsObjects(name) {
   var cols = tabColumns(name);
   return readRows(name).map(function (r) {
     var o = {};
-    cols.forEach(function (c, i) { o[c] = r[i] instanceof Date ? r[i].toISOString() : r[i]; });
+    cols.forEach(function (c, i) { o[c] = r[i] instanceof Date ? r[i].toISOString() : sheetUnsafe(r[i]); });
     return o;
   });
 }
@@ -54,7 +54,12 @@ function findRow(name, key) {
   return -1;
 }
 
+function appendSafe(name, row) {
+  tab(name).appendRow(sheetSafeRow(row));
+}
+
 function upsertRow(name, key, row) {
+  row = sheetSafeRow(row);
   var sh = tab(name);
   var r = findRow(name, key);
   if (r === -1) sh.appendRow(row);
@@ -107,7 +112,7 @@ function readRequests() {
 }
 
 function appendLog(row) {
-  tab('Log').appendRow(row);
+  appendSafe('Log', row);
 }
 
 function readLog(limit) {
@@ -150,7 +155,7 @@ function moveFiles(item, folder, shareWithLink) {
 
 // ---- Public catalog cache (CacheService values max 100 KB, so chunk) ----
 
-var CACHE_CHUNK = 90000;
+var CACHE_CHUNK = 30000; // characters; at most 3 UTF-8 bytes each, so under the 100 KB value limit
 var CACHE_TTL = 600;
 
 function cacheGetCatalog() {
@@ -169,12 +174,15 @@ function cacheGetCatalog() {
 }
 
 function cachePutCatalog(s) {
-  var cache = CacheService.getScriptCache();
   var vals = {};
   var n = 0;
   for (var i = 0; i < s.length; i += CACHE_CHUNK) vals['catalog:' + n++] = s.slice(i, i + CACHE_CHUNK);
   vals['catalog:n'] = String(n);
-  cache.putAll(vals, CACHE_TTL);
+  try {
+    CacheService.getScriptCache().putAll(vals, CACHE_TTL);
+  } catch (err) {
+    // A cache miss only costs speed; never fail the catalog request over it.
+  }
 }
 
 function bustCache() {

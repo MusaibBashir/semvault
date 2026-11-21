@@ -28,7 +28,11 @@ function setup() {
   var blank = ss.getSheetByName('Sheet1');
   if (blank && ss.getSheets().length > 1) ss.deleteSheet(blank);
 
-  if (!p.OWNER_EMAIL) store.setProperty('OWNER_EMAIL', Session.getEffectiveUser().getEmail().toLowerCase());
+  if (!p.OWNER_EMAIL) {
+    var owner = String(Session.getEffectiveUser().getEmail() || '').toLowerCase();
+    if (!owner) throw new Error('Could not read your email. Set OWNER_EMAIL in Project Settings > Script properties, then run setup() again.');
+    store.setProperty('OWNER_EMAIL', owner);
+  }
 
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (t.getHandlerFunction() === 'sendDigest') ScriptApp.deleteTrigger(t);
@@ -81,27 +85,42 @@ function importSeed() {
   }
 
   var existing = {};
-  readItems().forEach(function (it) { existing[it.id] = true; });
+  readItems().forEach(function (it) { existing[it.id] = it; });
+  var started = Date.now();
+  var BUDGET_MS = 4.5 * 60 * 1000; // stop before Apps Script's 6-minute limit
   var added = 0;
+  var finished = 0;
   var missing = [];
-  csvObjects(manifest).forEach(function (r) {
-    if (existing[r.id]) return;
+  var rows = csvObjects(manifest);
+  for (var i = 0; i < rows.length; i++) {
+    if (Date.now() - started > BUDGET_MS) {
+      Logger.log('Stopped early to stay under the time limit. Run importSeed() again to continue.');
+      break;
+    }
+    var r = rows[i];
     var f = fileInFolder(seed, r.file);
-    if (!f) { missing.push(r.file); return; }
+    var action = seedImportAction({ inCatalog: !!existing[r.id], fileInSeed: !!f });
+    if (action === 'skip') continue;
+    if (action === 'missing') { missing.push(r.file); continue; }
     var src = r.source_file ? fileInFolder(seed, r.source_file) : null;
-    var item = {
-      id: r.id, course: r.course, type: r.type, title: r.title, description: '',
-      fileId: f.getId(), sourceFileId: src ? src.getId() : '', sourceName: src ? (r.source_name || r.source_file) : '',
-      year: Number(r.year) || '', term: r.term, exam: r.exam, uploaderName: 'seed', uploaderEmail: '',
-      uploadedAt: new Date().toISOString(), status: 'approved',
-      startHere: String(r.start_here).toLowerCase() === 'y', startOrder: Number(r.start_order) || '',
-      reviewedBy: 'seed', reviewedAt: new Date().toISOString(), rejectReason: '',
-    };
+    var item = existing[r.id];
+    if (action === 'import') {
+      item = {
+        id: r.id, course: r.course, type: r.type, title: r.title, description: '',
+        fileId: f.getId(), sourceFileId: src ? src.getId() : '', sourceName: src ? (r.source_name || r.source_file) : '',
+        year: Number(r.year) || '', term: r.term, exam: r.exam, uploaderName: 'seed', uploaderEmail: '',
+        uploadedAt: new Date().toISOString(), status: 'approved',
+        startHere: String(r.start_here).toLowerCase() === 'y', startOrder: Number(r.start_order) || '',
+        reviewedBy: 'seed', reviewedAt: new Date().toISOString(), rejectReason: '',
+      };
+      writeItem(item); // row first: if the run is cut off now, the next run sees it and finishes the move
+      added++;
+    } else {
+      finished++;
+    }
     moveFiles(item, liveFolder(item.course), true);
-    writeItem(item);
-    added++;
-  });
+  }
   appendLog(logRow(props().OWNER_EMAIL, 'seed-import', '', added + ' items', new Date().toISOString()));
   bustCache();
-  Logger.log('Imported %s items. Missing files: %s', added, missing.join(', ') || 'none');
+  Logger.log('Imported %s items, finished %s half-done ones. Missing files: %s', added, finished, missing.join(', ') || 'none');
 }

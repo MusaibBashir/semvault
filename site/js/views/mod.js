@@ -279,9 +279,9 @@ async function tabStart(body, params) {
 // ---------------- Library ----------------
 
 async function tabLibrary(body, params) {
-  const catalog = await refreshCatalog();
+  const [catalog, { items: live }] = await Promise.all([refreshCatalog(), call('library')]);
   const q = params.q || '';
-  const list = q ? search(catalog.items, catalog.courses, q) : [...catalog.items].sort((a, b) => String(b.reviewedAt).localeCompare(String(a.reviewedAt)));
+  const list = q ? search(live, catalog.courses, q) : [...live].sort((a, b) => String(b.reviewedAt).localeCompare(String(a.reviewedAt)));
   body.innerHTML = `
     <form class="inline-form" data-libsearch><label class="sr-only" for="lib-q">Search the library</label>
       <input id="lib-q" name="q" type="search" value="${esc(q)}" placeholder="Search live files"><button class="btn btn-quiet">Search</button></form>

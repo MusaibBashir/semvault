@@ -135,7 +135,7 @@ If ownership ever has to move to a *different* Google account, transfer the Driv
 
 ## Limits worth knowing
 
-- Files over **25 MB** are refused (Apps Script's request size limit). Split big PDFs or compress them.
+- Files over **25 MB** are refused, and a file plus its source must be under **35 MB** together (Apps Script's request size limit). Compress or split big PDFs.
 - The free Gmail account has **15 GB** of Drive. Sem 5 is about 350 MB, so there's room for many batches.
 - Mail: about 100 recipients a day. Two digests to even 10 mods is fine.
 - At most 30 uploads an hour across everyone, to slow down spam.

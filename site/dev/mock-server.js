@@ -40,7 +40,7 @@ const find = (id) => state.items.find((x) => x.id === id) || fail('Item not foun
 
 export async function catalog() {
   await load();
-  const strip = ({ uploaderEmail, status, rejectReason, ...rest }) => rest;
+  const strip = ({ uploaderEmail, status, rejectReason, reviewedBy, ...rest }) => rest;
   return { ok: true, courses: state.courses, items: state.items.filter((x) => x.status === 'approved').map(strip), updatedAt: new Date().toISOString() };
 }
 
@@ -76,6 +76,7 @@ export async function handle(action, body) {
         log(me, 'course', c.code, c.name);
         return { courses: state.courses };
       }
+      case 'library': need(body, 'mod'); return { items: state.items.filter((x) => x.status === 'approved') };
       case 'activity': need(body, 'mod'); return { rows: state.log.slice(-(body.limit || 200)).reverse() };
       case 'requestMod': {
         const me = String(body.idToken).toLowerCase();

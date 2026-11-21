@@ -44,7 +44,12 @@ export async function post(action, body = {}) {
       headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids a CORS preflight Apps Script can't answer
       body: JSON.stringify({ action, ...body }),
     });
-    data = await res.json();
+    try {
+      data = await res.json();
+    } catch {
+      // Google answers oversized or broken requests with an HTML page, not JSON.
+      throw new Error("The server didn't accept that. If the files are large, try smaller ones, then try again.");
+    }
   }
   if (!data.ok) {
     const err = new Error(data.error || 'Something went wrong');

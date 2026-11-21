@@ -18,6 +18,7 @@ function doPost(e) {
       upload: handleUpload,
       me: handleMe,
       pending: handlePending,
+      library: handleLibrary,
       review: handleReview,
       update: handleUpdate,
       saveCourse: handleSaveCourse,
@@ -136,7 +137,7 @@ function handleRequestMod(body) {
   var me = requireRole(body, 'none');
   if (me.role !== 'none') return {};
   if (findRow('Requests', me.email) === -1) {
-    tab('Requests').appendRow([me.email, nowIso()]);
+    appendSafe('Requests', [me.email, nowIso()]);
     log(me.email, 'request-mod', '', '');
   }
   return {};
@@ -153,6 +154,12 @@ function handlePending(body) {
   var items = readItems().filter(function (it) { return it.status === 'pending'; });
   items.forEach(function (it) { it.fileUrl = driveView(it.fileId); it.sourceUrl = driveView(it.sourceFileId); });
   return { items: items };
+}
+
+// Live items with who approved them. Not public: reviewer emails stay inside the mod panel.
+function handleLibrary(body) {
+  requireRole(body, 'mod');
+  return { items: readItems().filter(function (it) { return it.status === 'approved'; }) };
 }
 
 function handleReview(body) {
@@ -230,7 +237,7 @@ function handleSetMod(body) {
   var email = String(body.email || '').trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) fail('That does not look like an email');
   if (body.decision === 'add') {
-    if (findRow('Mods', email) === -1) tab('Mods').appendRow([email, me.email, nowIso()]);
+    if (findRow('Mods', email) === -1) appendSafe('Mods', [email, me.email, nowIso()]);
     deleteRowByKey('Requests', email);
   } else if (body.decision === 'remove') {
     deleteRowByKey('Mods', email);

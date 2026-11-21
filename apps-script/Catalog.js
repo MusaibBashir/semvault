@@ -10,12 +10,13 @@ var CATALOG_COLUMNS = [
 var ITEM_TYPES = ['notes', 'formula', 'pyq', 'lab', 'assignment', 'other'];
 var MAX_BYTES = 25 * 1024 * 1024;
 var EDITABLE_FIELDS = ['title', 'description', 'course', 'type', 'year', 'term', 'exam', 'startHere', 'startOrder', 'status'];
-var PRIVATE_FIELDS = ['uploaderEmail', 'status', 'rejectReason'];
+var PRIVATE_FIELDS = ['uploaderEmail', 'status', 'rejectReason', 'reviewedBy'];
+var MAX_TOTAL_BYTES = 35 * 1024 * 1024; // Apps Script refuses requests over ~50 MB; base64 adds a third.
 
 function rowToItem(row) {
   var item = {};
   CATALOG_COLUMNS.forEach(function (col, i) {
-    var v = row[i];
+    var v = sheetUnsafe(row[i]);
     item[col] = v === undefined || v === null ? '' : v;
   });
   item.startHere = item.startHere === true || String(item.startHere).toUpperCase() === 'TRUE';
@@ -70,6 +71,9 @@ function validateUpload(meta, file, source) {
   if (source) {
     if (!/\.(tex|zip)$/i.test(String(source.name || ''))) errors.push('Source must be a .tex or .zip file');
     else if (base64Bytes(source.base64) > MAX_BYTES) errors.push('Source is too big (max 25 MB)');
+    else if (file && base64Bytes(file.base64) + base64Bytes(source.base64) > MAX_TOTAL_BYTES) {
+      errors.push('File and source together must be under 35 MB');
+    }
   }
   return { ok: errors.length === 0, errors: errors };
 }
@@ -109,4 +113,18 @@ function copy(o) {
   var out = {};
   Object.keys(o).forEach(function (k) { out[k] = o[k]; });
   return out;
+}
+
+// Text starting with = + - @ would run as a formula in the Sheet. A leading ' makes Sheets keep it as text
+// (and getValues returns it without the ').
+function sheetSafe(v) {
+  return typeof v === 'string' && /^[=+\-@]/.test(v) ? "'" + v : v;
+}
+
+function sheetUnsafe(v) {
+  return typeof v === 'string' && /^'[=+\-@]/.test(v) ? v.slice(1) : v;
+}
+
+function sheetSafeRow(row) {
+  return row.map(sheetSafe);
 }
